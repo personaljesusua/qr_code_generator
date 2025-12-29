@@ -59,12 +59,13 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   late final ValueNotifier<QrShapeStyle> _qrShapeStyle =
       ValueNotifier<QrShapeStyle>(QrShapeStyle.square);
-  late final ValueNotifier<Color> _color =
-      ValueNotifier<Color>(Colors.black);
-  late final ValueNotifier<Color> _bgColor =
-      ValueNotifier<Color>(Colors.transparent);
-  late final ValueNotifier<String?> _embeddedImagePath =
-      ValueNotifier<String?>(null);
+  late final ValueNotifier<Color> _color = ValueNotifier<Color>(Colors.black);
+  late final ValueNotifier<Color> _bgColor = ValueNotifier<Color>(
+    Colors.transparent,
+  );
+  late final ValueNotifier<String?> _embeddedImagePath = ValueNotifier<String?>(
+    null,
+  );
 
   late final ValueNotifier<String?> _qrDataNotifier = ValueNotifier<String?>(
     null,
@@ -113,7 +114,9 @@ class _MyHomePageState extends State<MyHomePage> {
         thumbVisibility: true,
         trackVisibility: true,
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(16).add(EdgeInsets.only(
+            bottom: 80,
+          )),
           child: Center(
             child: ConstrainedBox(
               constraints: BoxConstraints(
@@ -139,7 +142,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           valueListenable: _qrDataNotifier,
                           builder: (context, qrData, child) {
                             if (qrData == null) return Placeholder();
-              
+
                             return ValueListenableBuilder<QrShapeStyle>(
                               valueListenable: _qrShapeStyle,
                               builder: (context, shape, _) {
@@ -293,12 +296,12 @@ class _MyHomePageState extends State<MyHomePage> {
                               _embeddedImagePath.value = null;
                               return;
                             }
-              
+
                             final ImagePicker picker = ImagePicker();
                             final XFile? image = await picker.pickImage(
                               source: ImageSource.gallery,
                             );
-              
+
                             _embeddedImagePath.value = image?.path;
                           },
                           label: Text(
@@ -317,6 +320,15 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
       ),
+      persistentFooterButtons: [
+        TextButton(
+          onPressed: () {
+            showLicensePage(context: context);
+          },
+          child: Text('Ліцензії'),
+        ),
+      ],
+      floatingActionButtonLocation: .miniCenterDocked,
       floatingActionButton: ValueListenableBuilder<String?>(
         valueListenable: _qrDataNotifier,
         builder: (context, qrData, child) {
