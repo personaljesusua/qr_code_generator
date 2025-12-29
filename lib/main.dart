@@ -6,6 +6,7 @@ import 'package:file_saver/file_saver.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
+import 'package:qr_code_generator/theme.dart';
 import 'package:widgets_to_image/widgets_to_image.dart';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -29,13 +30,18 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    final brightness = View.of(context).platformDispatcher.platformBrightness;
+
+    // Retrieves the default theme for the platform
+    TextTheme textTheme = Theme.of(context).textTheme;
+
+    MaterialTheme theme = MaterialTheme(textTheme);
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
+      theme: theme.light(),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
@@ -51,10 +57,14 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  QrShapeStyle _qrShapeStyle = .square;
-  Color _color = Colors.black;
-  Color _bgColor = Colors.transparent;
-  String? _embeddedImagePath;
+  late final ValueNotifier<QrShapeStyle> _qrShapeStyle =
+      ValueNotifier<QrShapeStyle>(QrShapeStyle.square);
+  late final ValueNotifier<Color> _color =
+      ValueNotifier<Color>(Colors.black);
+  late final ValueNotifier<Color> _bgColor =
+      ValueNotifier<Color>(Colors.transparent);
+  late final ValueNotifier<String?> _embeddedImagePath =
+      ValueNotifier<String?>(null);
 
   late final ValueNotifier<String?> _qrDataNotifier = ValueNotifier<String?>(
     null,
@@ -87,6 +97,10 @@ class _MyHomePageState extends State<MyHomePage> {
   void dispose() {
     _debounce?.cancel();
     _qrDataNotifier.dispose();
+    _qrShapeStyle.dispose();
+    _color.dispose();
+    _bgColor.dispose();
+    _embeddedImagePath.dispose();
     _qrDataController.dispose();
     _widgetToImageController.dispose();
     super.dispose();
@@ -95,165 +109,212 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: .min,
-          crossAxisAlignment: .start,
-          spacing: 8,
-          children: [
-            WidgetsToImage(
-              controller: _widgetToImageController,
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: 300,
-                    maxWidth: 300,
-                    minHeight: 50,
-                    minWidth: 50,
-                  ),
-                  child: ValueListenableBuilder<String?>(
-                    valueListenable: _qrDataNotifier,
-                    builder: (context, qrData, child) {
-                      return qrData == null
-                          ? Placeholder()
-                          : PrettyQrView.data(
-                              data: qrData,
-                              decoration: PrettyQrDecoration(
-                                image: _embeddedImagePath == null
-                                    ? null
-                                    : PrettyQrDecorationImage(
-                                        image: NetworkImage(
-                                          _embeddedImagePath!,
-                                        ),
-                                      ),
-                                background: _bgColor,
-                                shape: switch (_qrShapeStyle) {
-                                  .square => PrettyQrSquaresSymbol(
-                                    color: _color,
-                                  ),
-                                  .circle => PrettyQrDotsSymbol(
-                                    color: _color,
-                                  ),
-                                  .smooth => PrettyQrSmoothSymbol(
-                                    color: _color,
-                                  ),
-                                },
-                                quietZone: .pixels(16),
-                              ),
+      body: Scrollbar(
+        thumbVisibility: true,
+        trackVisibility: true,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(16),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: 620,
+              ),
+              child: Column(
+                mainAxisSize: .min,
+                crossAxisAlignment: .center,
+                mainAxisAlignment: .center,
+                spacing: 8,
+                children: [
+                  WidgetsToImage(
+                    controller: _widgetToImageController,
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxHeight: 300,
+                          maxWidth: 300,
+                          minHeight: 50,
+                          minWidth: 50,
+                        ),
+                        child: ValueListenableBuilder<String?>(
+                          valueListenable: _qrDataNotifier,
+                          builder: (context, qrData, child) {
+                            if (qrData == null) return Placeholder();
+              
+                            return ValueListenableBuilder<QrShapeStyle>(
+                              valueListenable: _qrShapeStyle,
+                              builder: (context, shape, _) {
+                                return ValueListenableBuilder<Color>(
+                                  valueListenable: _color,
+                                  builder: (context, color, _) {
+                                    return ValueListenableBuilder<Color>(
+                                      valueListenable: _bgColor,
+                                      builder: (context, bgColor, _) {
+                                        return ValueListenableBuilder<String?>(
+                                          valueListenable: _embeddedImagePath,
+                                          builder: (context, embedded, _) {
+                                            return PrettyQrView.data(
+                                              data: qrData,
+                                              decoration: PrettyQrDecoration(
+                                                image: embedded == null
+                                                    ? null
+                                                    : PrettyQrDecorationImage(
+                                                        image: NetworkImage(
+                                                          embedded,
+                                                        ),
+                                                      ),
+                                                background: bgColor,
+                                                shape: switch (shape) {
+                                                  QrShapeStyle.square =>
+                                                    PrettyQrSquaresSymbol(
+                                                      color: color,
+                                                    ),
+                                                  QrShapeStyle.circle =>
+                                                    PrettyQrDotsSymbol(
+                                                      color: color,
+                                                    ),
+                                                  QrShapeStyle.smooth =>
+                                                    PrettyQrSmoothSymbol(
+                                                      color: color,
+                                                    ),
+                                                },
+                                                quietZone: .pixels(16),
+                                              ),
+                                            );
+                                          },
+                                        );
+                                      },
+                                    );
+                                  },
+                                );
+                              },
                             );
-                    },
-                  ),
-                ),
-              ),
-            ),
-            TextFormField(
-              controller: _qrDataController,
-              decoration: InputDecoration(
-                hintText: 'https://example.com',
-                labelText: 'Дані для QR кода',
-              ),
-            ),
-            _Setting(
-              name: 'Стиль QR коду',
-              child: _SegmentedButton<QrShapeStyle>(
-                segments: [
-                  ButtonSegment(
-                    value: .square,
-                    label: Text('Квадрат'),
-                  ),
-                  ButtonSegment(
-                    value: .circle,
-                    label: Text('Коло'),
-                  ),
-                  ButtonSegment(
-                    value: .smooth,
-                    label: Text('Плавний'),
-                  ),
-                ],
-                selected: {_qrShapeStyle},
-                onSelectionChanged: (selection) {
-                  setState(() => _qrShapeStyle = selection.single);
-                },
-              ),
-            ),
-            _Setting(
-              name: 'Колір',
-              child: _SegmentedButton<Color>(
-                segments: [
-                  ButtonSegment(
-                    value: Colors.black,
-                    label: Text('Чорний'),
-                    icon: _ColorPreview(color: Colors.black),
-                  ),
-                  ButtonSegment(
-                    value: Colors.white,
-                    label: Text('Білий'),
-                    icon: _ColorPreview(color: Colors.white),
-                  ),
-                ],
-                selected: {_color},
-                onSelectionChanged: (selection) {
-                  setState(() => _color = selection.single);
-                },
-              ),
-            ),
-            _Setting(
-              name: 'Фоновий колір',
-              child: _SegmentedButton<Color>(
-                segments: _bgColors.entries.map((entry) {
-                  return ButtonSegment(
-                    value: entry.key,
-                    label: Text(entry.value),
-                    icon: _ColorPreview(color: entry.key),
-                  );
-                }).toList(),
-                selected: {_bgColor},
-                onSelectionChanged: (selection) {
-                  setState(() => _bgColor = selection.single);
-                },
-              ),
-            ),
-            _Setting(
-              name: 'Зображення',
-              child: OutlinedButton.icon(
-                iconAlignment: _embeddedImagePath == null ? .start : .end,
-                style: _embeddedImagePath == null
-                    ? null
-                    : OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        side: const BorderSide(color: Colors.red),
+                          },
+                        ),
                       ),
-                onPressed: () async {
-                  if (_embeddedImagePath != null) {
-                    setState(() {
-                      _embeddedImagePath = null;
-                    });
-                    return;
-                  } 
-
-                  final ImagePicker picker = ImagePicker();
-                  final XFile? image = await picker.pickImage(
-                    source: ImageSource.gallery,
-                  );
-
-                  setState(() {
-                    _embeddedImagePath = image?.path;
-                  });
-                },
-                label: Text(
-                  _embeddedImagePath == null ? 'Вибрати' : 'Видалити',
-                ),
-                icon: Icon(
-                  _embeddedImagePath == null ? Icons.image : Icons.delete,
-                ),
+                    ),
+                  ),
+                  TextFormField(
+                    controller: _qrDataController,
+                    decoration: InputDecoration(
+                      hintText: 'https://example.com',
+                      labelText: 'Дані для QR кода',
+                    ),
+                  ),
+                  _Setting(
+                    name: 'Стиль QR коду',
+                    child: ValueListenableBuilder<QrShapeStyle>(
+                      valueListenable: _qrShapeStyle,
+                      builder: (context, value, _) {
+                        return _SegmentedButton<QrShapeStyle>(
+                          segments: [
+                            ButtonSegment(
+                              value: QrShapeStyle.square,
+                              label: Text('Квадрат'),
+                            ),
+                            ButtonSegment(
+                              value: QrShapeStyle.circle,
+                              label: Text('Коло'),
+                            ),
+                            ButtonSegment(
+                              value: QrShapeStyle.smooth,
+                              label: Text('Плавний'),
+                            ),
+                          ],
+                          selected: {value},
+                          onSelectionChanged: (selection) {
+                            _qrShapeStyle.value = selection.single;
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  _Setting(
+                    name: 'Колір',
+                    child: ValueListenableBuilder<Color>(
+                      valueListenable: _color,
+                      builder: (context, value, _) {
+                        return _SegmentedButton<Color>(
+                          segments: [
+                            ButtonSegment(
+                              value: Colors.black,
+                              label: Text('Чорний'),
+                              icon: _ColorPreview(color: Colors.black),
+                            ),
+                            ButtonSegment(
+                              value: Colors.white,
+                              label: Text('Білий'),
+                              icon: _ColorPreview(color: Colors.white),
+                            ),
+                          ],
+                          selected: {value},
+                          onSelectionChanged: (selection) {
+                            _color.value = selection.single;
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  _Setting(
+                    name: 'Фоновий колір',
+                    child: ValueListenableBuilder<Color>(
+                      valueListenable: _bgColor,
+                      builder: (context, value, _) {
+                        return _SegmentedButton<Color>(
+                          segments: _bgColors.entries.map((entry) {
+                            return ButtonSegment(
+                              value: entry.key,
+                              label: Text(entry.value),
+                              icon: _ColorPreview(color: entry.key),
+                            );
+                          }).toList(),
+                          selected: {value},
+                          onSelectionChanged: (selection) {
+                            _bgColor.value = selection.single;
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  _Setting(
+                    name: 'Зображення',
+                    child: ValueListenableBuilder<String?>(
+                      valueListenable: _embeddedImagePath,
+                      builder: (context, embedded, _) {
+                        return OutlinedButton.icon(
+                          iconAlignment: embedded == null ? .start : .end,
+                          style: embedded == null
+                              ? null
+                              : OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.red,
+                                  side: const BorderSide(color: Colors.red),
+                                ),
+                          onPressed: () async {
+                            if (embedded != null) {
+                              _embeddedImagePath.value = null;
+                              return;
+                            }
+              
+                            final ImagePicker picker = ImagePicker();
+                            final XFile? image = await picker.pickImage(
+                              source: ImageSource.gallery,
+                            );
+              
+                            _embeddedImagePath.value = image?.path;
+                          },
+                          label: Text(
+                            embedded == null ? 'Вибрати' : 'Видалити',
+                          ),
+                          icon: Icon(
+                            embedded == null ? Icons.image : Icons.delete,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
       floatingActionButton: ValueListenableBuilder<String?>(
