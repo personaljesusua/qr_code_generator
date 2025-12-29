@@ -3,17 +3,19 @@ const MANIFEST = 'flutter-app-manifest';
 const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 
-const RESOURCES = {"flutter_bootstrap.js": "9ee4071012465bb902989049c48e0203",
+const RESOURCES = {"flutter_bootstrap.js": "747f571cd1c16be3bc7df0d8960ee422",
 "version.json": "823669dcc5f9c13be93151bdb550316e",
 "favicon.ico": "58e1d699b2cf41d43020b95341eb2964",
 "index.html": "25bcefd73ea47738cf7afebf52435239",
 "/": "25bcefd73ea47738cf7afebf52435239",
-"main.dart.js": "3bfe561923af16c67d3a791eb38bca64",
+"main.dart.js": "c4bcedf4d9517df0313e206f66895764",
 "flutter.js": "24bc71911b75b5f8135c949e27a2984e",
 "icons/favicon.ico": "58e1d699b2cf41d43020b95341eb2964",
 "icons/apple-touch-icon.png": "db3c8ce66b0020f027e7faf10f2939e0",
+"icons/icon-192.png": "ed0ff0c84addfdef2b654b30894d01b5",
 "icons/icon-192-maskable.png": "97d04155f4c3b3a5db3a36f1ba48f39a",
 "icons/icon-512-maskable.png": "9418372b26d3717bb5fbb176809e22f7",
+"icons/icon-512.png": "7ade968a8352e06945fa2f13fbc854c4",
 "manifest.json": "b97cdf12ba946e72a86c899429c3e44e",
 "assets/NOTICES": "eec1d791f92b46178158ab8393030873",
 "assets/FontManifest.json": "7b2a36307916a9721811788013e65289",
